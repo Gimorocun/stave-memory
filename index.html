@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Electronic Keyboard</title>
+    <title>Stave Memory</title>
     <style>
         :root {
             --line-high-color: black;
@@ -535,9 +535,8 @@
             restartSolo();
             if (!soloModeEnabled && pauseButton.innerText === 'Pause') restart();
         }
-        // BPM: 120
-        // 四分音符为一拍 每分钟120拍,每秒钟2拍,每拍500ms
         const soloTimeLine1 = [
+            // bpm, denominator, transform, line, noteName, persist
             // row 1
             [88, 4, 'bABE', 13, '1th', true],
             [88, 4, 'bABE', 14, '1th', true],
@@ -1108,6 +1107,7 @@
             [108, 4, 'bABE', 29, '1th', true],
         ];
         const soloTimeLine2 = [
+            // bpm, denominator, transform, line, noteName, persist
             // node 1
             [75, 4, '#F', 21, '8th'],
             [75, 4, '#F', 18, '8th'],
