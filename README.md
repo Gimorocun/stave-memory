@@ -1,4 +1,4 @@
-Try Experience: [https://gimorocun.github.io/stave-memory/](https://gimorocun.github.io/stave-memory/)
+Try Experience [https://gimorocun.github.io/stave-memory/](https://gimorocun.github.io/stave-memory/)
 
 # stave-memory
 memorization of pentatonic scores for electric keyboard and piano.<br/>
