@@ -1,0 +1,2279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Electronic Keyboard</title>
+    <style>
+        :root {
+            --line-high-color: black;
+            --line-low-color: dodgerblue;
+            --bgc-hover: rgba(0, 0, 0, 0.14);
+            --box-shadow: 0 0.2vh 0.4vh 0.05vh rgba(0, 0, 0, 0.3);
+            --box-shadow-inset: inset 0 0.2vh 0.4vh 0.05vh rgba(0, 0, 0, 0.3);
+            --transition: all 200ms;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            flex-flow: column nowrap;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            padding: 5vh 5vw 4vh 5vw;
+            font-family: -apple-system, Helvetica, sans-serif;
+        }
+        button {
+            font-weight: lighter;
+            background-color: transparent;
+            border: none;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+        button:hover {
+            background-color: var(--bgc-hover);
+            cursor: pointer;
+        }
+        .visual {
+            position: relative;
+            display: flex;
+            flex-flow: column nowrap;
+            justify-content: space-between;
+            height: 80vh;
+            width: 80vw;
+            margin-bottom: 10vh;
+        }
+        .line-wrapper {
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: space-between;
+        }
+        .line-wrapper:last-of-type {
+            margin-bottom: 0;
+        }
+        .line-wrapper.soft span {
+            border-top-width: 0.6vh;
+            border-top-style: dashed;
+        }
+        .line-wrapper.hard span {
+            border-top-width: 0.6vh;
+            border-top-style: solid;
+        }
+        .line-wrapper span.line-high {
+            border-color: var(--line-high-color);
+        }
+        .line-wrapper span.line-low {
+            border-color: var(--line-low-color);
+        }
+        .symbol-high,
+        .symbol-low,
+        .symbol-bracket {
+            position: absolute;
+            left: 0;
+        }
+        .symbol-high {
+            top: 44%;
+            fill: var(--line-high-color);
+        }
+        .symbol-low {
+            bottom: 15%;
+            fill: var(--line-low-color);
+        }
+        .symbol-bracket {
+            top: 50%;
+            fill: #222;
+        }
+        .audio-control {
+            position: absolute;
+            left: 0;
+            top: 0;
+            cursor: pointer;
+            transform: translate(-16%, -18%);
+            transition: var(--transition);
+        }
+        .audio-control:active {
+            transform: translate(-16%, -18%) scale(0.9);
+        }
+        .note-1th,
+        .note-2th,
+        .note-4th,
+        .note-8th,
+        .note-16th,
+        .note-1th-down,
+        .note-2th-down,
+        .note-4th-down,
+        .note-8th-down,
+        .note-16th-down {
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        .solo-note {
+            opacity: 0;
+            transition: all 1000ms;
+        }
+        .option {
+            display: flex;
+            flex-flow: column nowrap;
+            justify-content: center;
+            width: 80vw;
+            margin-bottom: 5vh;
+        }
+        #pause-button {
+            height: 10vh;
+            font-size: 7vh;
+            margin-bottom: 1vh;
+        }
+        #pause-button:active {
+            font-size: 6.6vh;
+        }
+        .input-wrapper {
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: space-between;
+        }
+        #interval-seconds,
+        #note-range,
+        #restart-button {
+            width: 33%;
+            height: 5vh;
+            font-size: 4vh;
+            background-color: transparent;
+            border: none;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+        #restart-button:hover,
+        #interval-seconds:hover,
+        #note-range:hover {
+            background-color: var(--bgc-hover);
+        }
+        #restart-button:hover {
+            cursor: pointer;
+        }
+        #restart-button:active {
+            font-size: 3.5vh;
+        }
+        .bgi {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('./backgrounds/bgi_by_saberiii.png');
+            background-repeat: no-repeat;
+            background-position: right top;
+            background-size: cover;
+            opacity: 0.25;
+            pointer-events: none;
+        }
+        .copyright {
+            font-size: 2vh;
+            color: #999;
+            text-align: center;
+        }
+        .copyright p:first-of-type {
+            height: 3vh;
+        }
+        #egg-wrapper {
+            height: 3vh;
+            transition: var(--transition);
+            user-select:none;
+        }
+        #egg-wrapper:not(.enabled) {
+            display: none;
+        }
+        #egg-wrapper.enabled + p {
+            display: none;
+        }
+        #egg-wrapper span {
+            margin-right: 0.5vw;
+        }
+        #egg-wrapper span:hover {
+            color: #222;
+            box-shadow: var(--box-shadow-inset);
+            cursor: pointer;
+        }
+        #egg-wrapper span.enabled {
+            color: #222;
+        }
+        .copyright:hover p:first-of-type {
+            display: none;
+        }
+        .copyright:hover #egg-wrapper {
+            display: inline-block;
+        }
+        .github {
+            opacity: 0.3;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .github:hover {
+            opacity: 1;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<img class="bgi"/>
+<section class="visual" style="user-select:none;">
+</section>
+<section class="option" style="user-select:none;">
+    <button id="pause-button">Pause</button>
+    <div class="input-wrapper">
+        <input id="interval-seconds" type="text" placeholder="1000"/>
+        <input id="note-range" type="text" placeholder="CDEFGAB"/>
+        <input id="restart-button" type="button" value="Restart"/>
+    </div>
+</section>
+<section class="copyright">
+    <div id="egg-wrapper">
+        <span class="solo solo-1">天空の城ラピュタ</span>
+        <span class="solo solo-2">チャイルドフッズ・メモリー</span>
+        <span class="solo solo-3">スカイ・クロラ</span>
+    </div>
+    <p>Powered By Gimo</p>
+    <p>Gimorocun@Gmail.com</p>
+</section>
+
+<script type="text/javascript">
+    window.onload = function() {
+        // globals
+        let soloModeEnabled = false;
+        let globalTimer = null;
+        let smallScreen = matchMedia('(max-width: 600px)').matches;
+        // visual
+        const visualSection = document.getElementsByClassName('visual')[0];
+        // notes
+        const symbolHigh = document.getElementById('symbol-high').content.firstElementChild.cloneNode(true);
+        const symbolLow = document.getElementById('symbol-low').content.firstElementChild.cloneNode(true);
+        const symbolBracket = document.getElementById('symbol-bracket').content.firstElementChild.cloneNode(true);
+        const note1th = document.getElementById('note-1th').content.firstElementChild.cloneNode(true);
+        const note2th = document.getElementById('note-2th').content.firstElementChild.cloneNode(true);
+        const note4th = document.getElementById('note-4th').content.firstElementChild.cloneNode(true);
+        const note8th = document.getElementById('note-8th').content.firstElementChild.cloneNode(true);
+        const note16th = document.getElementById('note-16th').content.firstElementChild.cloneNode(true);
+        // notes down
+        const note1thDown = document.getElementById('note-1th-down').content.firstElementChild.cloneNode(true);
+        const note2thDown = document.getElementById('note-2th-down').content.firstElementChild.cloneNode(true);
+        const note4thDown = document.getElementById('note-4th-down').content.firstElementChild.cloneNode(true);
+        const note8thDown = document.getElementById('note-8th-down').content.firstElementChild.cloneNode(true);
+        const note16thDown = document.getElementById('note-16th-down').content.firstElementChild.cloneNode(true);
+        // options
+        const pauseButton = document.getElementById('pause-button');
+        const restartButton = document.getElementById('restart-button');
+        const customNoteRange = document.getElementById('note-range');
+        const customIntervalSeconds = document.getElementById('interval-seconds');
+        const audioControl = document.getElementById('audio-control').content.firstElementChild.cloneNode(true);
+        const copyright = document.getElementsByClassName('copyright')[0];
+        const github = document.getElementById('github').content.firstElementChild.cloneNode(true);
+        // regular expressions
+        const CDEFGAB = /[CDEFGAB]/i;
+        const regNumber = /[0-9]/;
+        // layout
+        const colorBlack = 'line-high', colorBlue = 'line-low';
+        const linesLayout = {
+            // [lines]: [left, right, className...]
+            '[0, 1, 2, 3, 4]': [[0, colorBlack], [30, colorBlack], ['high', 'soft']],
+            '[5, 6, 7]': [[100, colorBlack], [0, colorBlack], ['high', 'hard']],
+            '[8, 9]': [[70, colorBlack], [30, colorBlue], ['high', 'hard']],
+            '[10]': [[50, colorBlack], [50, colorBlue], ['middle', 'soft']],
+            '[11, 12]': [[30, colorBlack], [70, colorBlue], ['low', 'hard']],
+            '[13, 14, 15]': [[0, colorBlack], [100, colorBlue], ['low', 'hard']],
+            '[16, 17]': [[30, colorBlue], [0, colorBlue], ['low', 'soft']],
+        }
+        const lineLayout = {};
+        for (let [lines, layout] of Object.entries(linesLayout)) {
+            for (let line of lines.slice(1, -1).split(',')) lineLayout[line.trim()] = layout;
+        }
+        // generate lines
+        const lineTemplate = document.getElementById('line');
+        function resetLines() {
+            const existNotes = document.querySelectorAll('svg[class^="note-"]');
+            existNotes.forEach(note => note.remove());
+            const existLines = document.querySelectorAll('.line-wrapper');
+            existLines.forEach(line => line.remove());
+            symbolHigh.style.opacity = '1';
+            symbolLow.style.opacity = '1';
+            for (let i = 0; i < 18; i++) {
+                if (!i === lineLayout) continue;
+                let [leftLayout, rightLayout, classNames] = lineLayout[i];
+                if (soloModeEnabled && [0, 1, 2, 3, 4, 16, 17].includes(i)) {
+                    if (i < 5) {
+                        if (i < 2) {
+                            leftLayout = [0, colorBlack];
+                            rightLayout = [90, colorBlack];
+                        } else {
+                            leftLayout = [0, colorBlack];
+                            rightLayout = [100, colorBlack];
+                        }
+                    } else {
+                        leftLayout = [100, colorBlue];
+                        rightLayout = [0, colorBlue];
+                    }
+                }
+                const lineWrapper = lineTemplate.content.firstElementChild.cloneNode(true);
+                const lineLeft = lineWrapper.getElementsByClassName('line-left')[0];
+                const lineRight = lineWrapper.getElementsByClassName('line-right')[0];
+                for (let className of classNames) lineWrapper.classList.add(className);
+                lineLeft.style.width = leftLayout[0] + '%';
+                lineRight.style.width = rightLayout[0] + '%';
+                lineLeft.classList.add(leftLayout[1]);
+                lineRight.classList.add(rightLayout[1]);
+                visualSection.append(lineWrapper);
+            }
+        }
+        resetLines();
+        // extras
+        visualSection.append(symbolHigh);
+        visualSection.append(symbolLow);
+        visualSection.append(symbolBracket);
+        visualSection.append(audioControl);
+        // note config
+        const noteRange = {
+            // [c0, c1, c2, C, C1]
+            'C': [20, 13, 6, 27, 34],
+            'D': [19, 12, 5, 26, 33],
+            'E': [18, 11, 4, 25, 32],
+            'F': [17, 10, 3, 24, 31],
+            'G': [16, 9,  2, 23, 30],
+            'A': [15, 8,  1, 22, 29],
+            'B': [14, 7,  0, 21, 28],
+        }
+        const noteHighRange = {
+            // [c0, c1, c2, *C]
+            // *C: extra part of high
+            'C': [20, 13, 6],
+            'D': [19, 12, 5],
+            'E': [18, 11, 4],
+            'F': [17, 10, 3, 24],
+            'G': [16, 9,  2, 23],
+            'A': [15, 8,  1, 22],
+            'B': [14, 7,  0, 21],
+        }
+        const noteLowRange = {
+            // [C, C1, *c0]
+            // *c0: extra part of low
+            'C': [27, 34, 20],
+            'D': [26, 33, 19],
+            'E': [25, 32, 18],
+            'F': [24, 31, 17],
+            'G': [23, 30, 16],
+            'A': [22, 29],
+            'B': [21, 28],
+        }
+        const noteNameDict = {
+            '1th-Up': note1th,
+            '2th-Up': note2th,
+            '4th-Up': note4th,
+            '8th-Up': note8th,
+            '16th-Up': note16th,
+            '1th-Down': note1thDown,
+            '2th-Down': note2thDown,
+            '4th-Down': note4thDown,
+            '8th-Down': note8thDown,
+            '16th-Down': note16thDown,
+        }
+        /*
+        升音 #开头
+        降音 b开头 借用#升音
+
+        大字1组/大字0组/小字0组/小字1组/小字2组
+
+        大字1组
+            iC1 [#iC1] iD1 [#iD1] iE1 iF1 [#iF1] iG1 [#iG1] iA1 [#iA1] iB1
+            特例
+                #iE1 -> iF1
+                #iB1 -> iC0
+                biF1 -> iE1
+                biC1 -> iB2
+            其他
+                biB1 -> #iA1
+                ...
+        */
+        const noteTransform = {
+            '#': {
+                'iA2': 'uiA2', 'iB2': 'iC1',
+                'iC1': 'uiC1', 'iD1': 'uiD1', 'iE1': 'iF1', 'iF1': 'uiF1', 'iG1': 'uiG1', 'iA1': 'uiA1', 'iB1': 'iC0',
+                'iC0': 'uiC0', 'iD0': 'uiD0', 'iE0': 'iF0', 'iF0': 'uiF0', 'iG0': 'uiG0', 'iA0': 'uiA0', 'iB0': 'C0',
+                'C0': 'uC0', 'D0': 'uD0', 'E0': 'F0', 'F0': 'uF0', 'G0': 'uG0', 'A0': 'uA0', 'B0': 'C1',
+                'C1': 'uC1', 'D1': 'uD1', 'E1': 'F1', 'F1': 'uF1', 'G1': 'uG1', 'A1': 'uA0', 'B1': 'C2',
+                'C2': 'uC2', 'D2': 'uD2', 'E2': 'F2', 'F2': 'uF2', 'G2': 'uG2', 'A2': 'uA2', 'B2': 'C3',
+                'C3': 'uC3', 'D3': 'uD3', 'E3': 'F3', 'F3': 'uF3', 'G3': 'uG3', 'A3': 'uA3', 'B3': 'C3',
+                'C4': 'uC4', 'D4': 'uD4', 'E4': 'F4', 'F4': 'uF4', 'G4': 'uG4', 'A4': 'uA4', 'B4': 'C5',
+                'C5': 'C5',
+            },
+            'b': {
+                'iA2': 'iA2', 'iB2': 'uiA2',
+                'iC1': 'iB2', 'iD1': 'uiC1', 'iE1': 'uiD1', 'iF1': 'iE1', 'iG1': 'iuF1', 'iA1': 'uiG1', 'iB1': 'uiA1',
+                'iC0': 'iB1', 'iD0': 'uiC0', 'iE0': 'uiD0', 'iF0': 'iE0', 'iG0': 'iuF0', 'iA0': 'uiG0', 'iB0': 'uiA0',
+                'C0': 'iB0', 'D0': 'uC0', 'E0': 'uD0', 'F0': 'E0', 'G0': 'uF0', 'A0': 'uG0', 'B0': 'uA0',
+                'C1': 'B0', 'D1': 'uC1', 'E1': 'uD1', 'F1': 'E1', 'G1': 'uF1', 'A1': 'uG1', 'B1': 'uA1',
+                'C2': 'B1', 'D2': 'uC2', 'E2': 'uD2', 'F2': 'E2', 'G2': 'uF2', 'A2': 'uG2', 'B2': 'uA2',
+                'C3': 'B2', 'D3': 'uC3', 'E3': 'uD3', 'F3': 'E3', 'G3': 'uF3', 'A3': 'uG3', 'B3': 'uA3',
+                'C4': 'B3', 'D4': 'uC4', 'E4': 'uD4', 'F4': 'E4', 'G4': 'uF4', 'A4': 'uG4', 'B4': 'uA4',
+                'C5': 'B4',
+            }
+        }
+        const noteRangeRevert = {};
+        for (let [note, lines] of Object.entries(noteRange)) {
+            for (let line of lines) noteRangeRevert[line] = note;
+        }
+        // core functions
+        restart();
+        function clearTimer() {
+            clearInterval(globalTimer);
+            globalTimer = null;
+        }
+        function restart() {
+            pauseButton.innerText = 'Pause';
+            const intervalSeconds = document.getElementById('interval-seconds').value || 1000;
+            const noteRangeStr = document.getElementById('note-range').value || 'CDEFGAB';
+            clearTimer();
+            globalTimer = setInterval(function () {
+                const existNotes = document.querySelectorAll('svg[class^="note-"]');
+                existNotes.forEach(note => note.remove());
+                // randomLine -> noteDirection -> note(notePull) & notePosition
+                const randomLinePull = [];
+                const highEnabled = (symbolHigh.style.opacity || '1') === '1';
+                const lowEnabled = (symbolLow.style.opacity || '1') === '1';
+                for (let i of noteRangeStr) {
+                    if (highEnabled) randomLinePull.push(...noteHighRange[i]);
+                    if (lowEnabled) randomLinePull.push(...noteLowRange[i]);
+                }
+                if (!randomLinePull.length) return console.log('Warning: No line available.');
+                const randomLine = randomLinePull[Math.floor(Math.random() * randomLinePull.length)];
+                visualizeLine(randomLine, highEnabled, lowEnabled);
+                const audioName = playAudio(randomLine);
+                console.log(`${noteRangeStr}, ${intervalSeconds}, no-${randomLine}, ${audioName}`)
+            }, ~~intervalSeconds);
+        }
+        function noteDirectionFromLineNum(lineNum) {
+            return [7 * 2, 10 * 2, 13 * 2].includes(lineNum) ?
+                ['Down', 'Up'][Math.floor(Math.random() * 2)] :
+                lineNum < 7 * 2 ? 'Down' :
+                    lineNum < 10 * 2 ? 'Up' :
+                        lineNum < 13 * 2 ? 'Down' : 'Up';
+        }
+        function notePollFromDirection(direction) {
+            return direction === 'Down' ?
+                [note1thDown, note2thDown, note4thDown, note8thDown] :
+                [note1th, note2th, note4th, note8th];
+        }
+        function playAudio(lineNum, transform) {
+            const audioEnabled = (audioControl.style.opacity || '1') === '1';
+            const audioNote = noteRangeRevert[lineNum];
+            const audioIndex = noteRange[audioNote].indexOf(lineNum);
+            const isBigGroup = audioIndex > 2;
+            let audioName = isBigGroup ? 'i' + audioNote + (audioIndex - 3) : audioNote + audioIndex;
+            let targetAudioName = audioName;
+            if (transform) {
+                const transType = transform.slice(0, 1);
+                for (let i of transform.slice(1)) {
+                    if (noteRange[i].indexOf(lineNum) > -1) {
+                        targetAudioName = noteTransform[transType][audioName];
+                        break;
+                    }
+                }
+                audioName = transType + audioName;
+            }
+            if (audioEnabled) (new Audio('./effects/' + targetAudioName + '.mp3')).play();
+            return audioName;
+        }
+        // event listeners
+        restartButton.onclick = restart;
+        pauseButton.onclick = function() {
+            if (soloModeEnabled) return;
+            if (globalTimer) {
+                clearTimer();
+                pauseButton.innerText = 'Start';
+            } else {
+                resetLines();
+                restart();
+            }
+        }
+        customNoteRange.oninput = function(event) {
+            const inputChar = new RegExp(event.data, 'ig')
+            if (event.data !== null && (!CDEFGAB.test(event.data) || (this.value.match(inputChar) || []).length > 1))
+                this.value = this.value.slice(0, -1);
+            this.value = this.value.toUpperCase();
+        }
+        customIntervalSeconds.oninput = function(event) {
+            if (event.data !== null && !regNumber.test(event.data))
+                this.value = this.value.slice(0, -1);
+        }
+        audioControl.onclick = function() {
+            this.style.opacity = (this.style.opacity || '1') === '1' ? '0.3' : '1';
+        }
+        for (let i of [symbolHigh, symbolLow]) {
+            i.onclick = function() {
+                this.style.opacity = (this.style.opacity || '1') === '1' ? '0.3' : '1';
+                if (i === symbolHigh) document.querySelectorAll('.line-high').forEach(
+                    line => line.style.opacity = (line.style.opacity || '1') === '1' ? '0.3' : '1');
+                if (i === symbolLow) document.querySelectorAll('.line-low').forEach(
+                    line => line.style.opacity = (line.style.opacity || '1') === '1' ? '0.3' : '1');
+            }
+        }
+        copyright.lastElementChild.append(github);
+        github.onclick = function() {
+            window.open('https://github.com/Gimorocun/mnemonic_scores');
+        }
+        // solo
+        const solos = document.getElementsByClassName('solo');
+        for (let solo of solos) solo.onclick = function() {
+            if (soloModeEnabled) {
+                for (let i of this.parentElement.children) i.classList.remove('enabled');
+                this.parentElement.classList.remove('enabled');
+            } else {
+                this.classList.add('enabled');
+                this.parentElement.classList.add('enabled');
+            }
+            soloModeEnabled = !soloModeEnabled;
+            restartSolo();
+            if (!soloModeEnabled && pauseButton.innerText === 'Pause') restart();
+        }
+        // BPM: 120
+        // 四分音符为一拍 每分钟120拍,每秒钟2拍,每拍500ms
+        const soloTimeLine1 = [
+            // row 1
+            [88, 4, 'bABE', 13, '1th', true],
+            [88, 4, 'bABE', 14, '1th', true],
+            [88, 4, 'bABE', 15, '1th', true],
+            [88, 4, 'bDABE', 19, '1th', true],
+            [88, 4, 'bABE', 3, '4th', true, '8th'],
+            [88, 4, 'bABE', 6, '4th', true, '8th'],
+            [88, 4, 'bABE', 7, '4th', true, '8th'],
+            [88, 4, 'bABE', 10, '4th', false, '8th'],
+            [88, 4, 'bABE', 6, '8th'],
+            [88, 4, 'bABE', 6, '2th'],
+            [88, 4, 'bABE', 6, '1th', true],
+            [88, 4, 'bABE', 13, '1th', true],
+            [88, 4, 'bABE', 14, '1th', true],
+            [88, 4, 'bABE', 15, '1th', true],
+            [88, 4, 'bABE', 19, '1th'],
+            [88, 4, 'bABE', 14, '1th', true],
+            [88, 4, 'bABE', 15, '1th', true],
+            [88, 4, 'bABE', 16, '1th', true],
+            [88, 4, 'bABE', 20, '1th', true],
+            [88, 4, 'bABE', 4, '4th', true, '8th'],
+            [88, 4, 'bABE', 7, '4th', true, '8th'],
+            [88, 4, 'bABE', 8, '4th', true, '8th'],
+            [88, 4, 'bABE', 11, '4th', false, '8th'],
+            [88, 4, 'bABE', 7, '8th'],
+            [88, 4, 'bABE', 7, '2th'],
+            [88, 4, 'bABE', 7, '2th', true, '4th'],
+            [88, 4, 'bABE', 14, '2th', true, '4th'],
+            [88, 4, 'bABE', 15, '2th', true, '4th'],
+            [88, 4, 'bABE', 16, '2th', true, '4th'],
+            [88, 4, 'bABE', 20, '2th', false, '4th'],
+            [88, 4, 'bDABE', 5, '2th', true, '4th'],
+            [88, 4, 'bABE', 8, '2th', true, '4th'],
+            [88, 4, 'bABE', 11, '2th', true, '4th'],
+            [88, 4, 'bABE', 14, '2th', true, '4th'],
+            [88, 4, 'bABE', 17, '2th', true, '4th'],
+            [88, 4, 'bABE', 20, '2th', false, '4th'],
+            [88, 4, 'bABE', 4, '2th', true, '4th'],
+            [88, 4, 'bABE', 8, '2th', true, '4th'],
+            [88, 4, 'bABE', 11, '2th', true, '4th'],
+            [88, 4, 'bABE', 14, '2th', true, '4th'],
+            [88, 4, 'bABE', 17, '2th', true, '4th'],
+            [88, 4, 'bABE', 20, '2th', false, '4th'],
+            [88, 4, 'bABE', 6, '2th', true, '4th'],
+            [88, 4, 'bABE', 10, '2th', true, '4th'],
+            [88, 4, 'bABE', 12, '2th', true, '4th'],
+            [88, 4, 'bABE', 16, '2th', true, '4th'],
+            [88, 4, 'bABE', 19, '2th', true, '4th'],
+            [88, 4, 'bABE', 23, '2th', false, '4th'],
+            [88, 4, 'bABE', 6, '2th', true, '4th'],
+            [88, 4, 'bABE', 10, '2th', true, '4th'],
+            [88, 4, 'bABE', 12, '2th', true, '4th'],
+            [88, 4, 'bABE', 16, '2th', true, '4th'],
+            [88, 4, 'bABE', 19, '2th', true, '4th'],
+            [88, 4, 'bABE', 23, '2th', false, '4th'],
+            [88, 4, 'bABE', 16, '1th', true],
+            [88, 4, 'bABE', 19, '1th', true],
+            [88, 4, 'bABE', 23, '1th', true],
+            [88, 4, 'bABE', 6, '2th', true, '4th'],
+            [88, 4, 'bABE', 10, '2th', true, '4th'],
+            [88, 4, 'bABE', 12, '2th', false, '4th'],
+            [88, 4, 'bABE', 13, '8th'],
+            [88, 4, 'bABE', 12, '8th'],
+            // row 2
+            [108, 4, 'bABE', 16, '1th', true],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 11, '4th', false, '8th'],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, 'bABE', 9, '4th'],
+            [108, 4, 'bABE', 12, '2th', false, '4th'],
+            [108, 4, 'bABE', 16, '4th'],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 22, '1th', true],
+            [108, 4, 'bABE', 12, '2th', false, '4th'],
+            [108, 4, 'bABE', 14, '8th'],
+            [108, 4, 'bABE', 13, '4th'],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, 'bABE', 17, '1th', true],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 23, '1th', true],
+            [108, 4, 'bABE', 14, '2th', false, '4th'],
+            [108, 4, 'bABE', 16, '4th'],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 24, '1th', true],
+            [108, 4, 'bABE', 15, '4th', false, '8th'],
+            [108, 4, 'bABE', 16, '8th'],
+            [108, 4, 'bABE', 15, '4th'],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 25, '1th', true],
+            [108, 4, 'bABE', 16, '2th', false, '4th'],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, '#F', 17, '1th', true],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 26, '1th', true],
+            [108, 4, 'bABE', 12, '4th', false, '8th'],
+            [108, 4, '', 15, '8th'],
+            [108, 4, 'bABE', 15, '4th'],
+            [108, 4, 'bABE', 12, '4th'],
+            [108, 4, 'bABE', 23, '1th', true],
+            [108, 4, 'bABE', 12, '2th', true, '8th'],
+            [108, 4, '', 14, '2th', true, '8th'],
+            [108, 4, 'bABE', 16, '2th', false, '8th'],
+            [108, 4, 'bABE', 15, '8th'],
+            [108, 4, 'bABE', 14, '8th'],
+            // row 3
+            [108, 4, 'bABE', 16, '1th', true],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 11, '4th', false, '8th'],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, 'bABE', 9, '4th'],
+            [108, 4, 'bABE', 12, '2th', false, '4th'],
+            [108, 4, 'bABE', 16, '4th'],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 22, '1th', true],
+            [108, 4, 'bABE', 12, '2th', false, '4th'],
+            [108, 4, 'bABE', 14, '8th'],
+            [108, 4, 'bABE', 13, '4th'],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, 'bABE', 17, '1th', true],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 23, '1th', true],
+            [108, 4, 'bABE', 14, '2th', false, '4th'],
+            [108, 4, 'bABE', 16, '4th'],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 24, '1th', true],
+            [108, 4, 'bABE', 15, '4th'],
+            [108, 4, 'bABE', 11, '8th'],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 12, '4th'],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, 'bABE', 10, '4th', true],
+            [108, 4, 'bABE', 27, '4th'],
+            [108, 4, 'bABE', 23, '4th', true],
+            [108, 4, 'bABE', 9, '8th'],
+            [108, 4, 'bABE', 11, '8th'],
+            [108, 4, 'bABE', 11, '2th', true],
+            [108, 4, 'bABE', 20, '2th'],
+            [108, 4, 'bABE', 23, '2th'],
+            [108, 4, 'bABE', 15, '2th', true],
+            [108, 4, 'bABE', 24, '2th', true],
+            [108, 4, 'bABE', 11, '8th'],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 13, '4th'],
+            [108, 4, 'bABE', 17, '2th', true],
+            [108, 4, 'bABE', 23, '2th', true],
+            [108, 4, 'bABE', 12, '4th'],
+            [108, 4, '', 14, '4th'],
+            [108, 4, 'bABE', 13, '2th', true, '4th'],
+            [108, 4, 'bABE', 16, '2th', true, '4th'],
+            [108, 4, 'bABE', 18, '2th', true, '4th'],
+            [108, 4, 'bABE', 27, '4th'],
+            [108, 4, 'bABE', 23, '4th'],
+            [108, 4, 'bABE', 20, '2th', true],
+            [108, 4, 'bABE', 23, '2th'],
+            [108, 4, 'bABE', 11, '8th'],
+            [108, 4, 'bABE', 10, '8th'],
+            // row 4
+            [108, 4, 'bABE', 9, '4th', true, '8th'],
+            [108, 4, 'bABE', 25, '4th'],
+            [108, 4, 'bABE', 21, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 10, '8th'],
+            [108, 4, 'bABE', 9, '4th', true],
+            [108, 4, 'bABE', 21, '4th'],
+            [108, 4, 'bABE', 10, '2th', true, '2th'],
+            [108, 4, 'bABE', 26, '4th'],
+            [108, 4, 'bABE', 21, '4th'],
+            [108, 4, 'bABE', 17, '4th'],
+            [108, 4, 'bABE', 16, '8th', true],
+            [108, 4, 'bABE', 21, '4th'],
+            [108, 4, 'bABE', 27, '4th'],
+            [108, 4, 'bABE', 23, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 11, '4th', true],
+            [108, 4, 'bABE', 18, '4th'],
+            [108, 4, 'bABE', 9, '4th', true],
+            [108, 4, 'bABE', 23, '4th'],
+            [108, 4, 'bABE', 9, '1th', true],
+            [108, 4, 'bABE', 30, '4th'],
+            [108, 4, 'bABE', 23, '4th'],
+            [108, 4, 'bABE', 19, '4th'],
+            [108, 4, 'bABE', 23, '4th'],
+            [108, 4, 'bABE', 29, '2th', true],
+            [108, 4, 'bABE', 13, '8th'],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 11, '4th', true],
+            [108, 4, 'bABE', 20, '4th'],
+            [108, 4, 'bABE', 29, '2th', true],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 11, '8th'],
+            [108, 4, 'bABE', 10, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 19, '4th', true],
+            [108, 4, 'bABE', 21, '4th', true],
+            [108, 4, 'bABE', 22, '4th'],
+            [108, 4, 'bABE', 30, '1th', true],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, 'bABE', 25, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 14, '8th'],
+            [108, 4, 'bABE', 14, '2th', true],
+            [108, 4, 'bABE', 21, '4th'],
+            [108, 4, 'bABE', 25, '4th'],
+            [108, 4, 'bABE', 31, '1th', true],
+            [108, 4, 'bABE', 11, '1th', true],
+            [108, 4, 'bABE', 13, '1th', true],
+            [108, 4, 'bABE', 15, '1th', true],
+            [108, 4, 'bABE', 8, '4th'],
+            [108, 4, 'bABE', 9, '4th', true],
+            [108, 4, 'bABE', 27, '4th'],
+            [108, 4, 'bABE', 10, '4th', true],
+            [108, 4, 'bABE', 22, '4th'],
+            [108, 4, 'bABE', 11, '4th', true],
+            [108, 4, 'bABE', 27, '4th'],
+            // row 5
+            [108, 4, 'bABE', 9, '1th', true],
+            [108, 4, 'bABE', 12, '1th', true],
+            [108, 4, 'bABE', 13, '1th', true],
+            [108, 4, 'bABE', 16, '1th', true],
+            [108, 4, 'bABE', 30, '1th'],
+            [108, 4, 'bABE', 26, '2th'],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 16, '8th'],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, '', 21, '1th', true],
+            [108, 4, 'bABE', 30, '1th'],
+            [108, 4, 'bABE', 26, '4th'],
+            [108, 4, 'bABE', 23, '2th', true],
+            [108, 4, 'bABE', 26, '2th'],
+            [108, 4, 'bABE', 9, '4th'],
+            [108, 4, 'bABE', 16, '4th'],
+            [108, 4, 'bABE', 27, '1th', true],
+            [108, 4, 'bABE', 6, '2th', true],
+            [108, 4, 'bABE', 9, '2th', true],
+            [108, 4, 'bABE', 11, '2th', true],
+            [108, 4, 'bABE', 13, '8th'],  // 2th->8th
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 18, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 7, '2th', true],
+            [108, 4, 'bABE', 10, '2th', true],
+            [108, 4, 'bABE', 12, '2th', true],
+            [108, 4, 'bABE', 14, '2th', true],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 29, '1th', true],
+            [108, 4, 'bABE', 9, '4th', true],
+            [108, 4, 'bABE', 11, '4th', true],
+            [108, 4, 'bABE', 13, '4th', true],
+            [108, 4, 'bABE', 16, '4th'],
+            [108, 4, 'bABE', 10, '4th', true],
+            [108, 4, 'bABE', 17, '4th', true],
+            [108, 4, 'bABE', 25, '4th'],
+            [108, 4, 'bABE', 11, '4th', true],
+            [108, 4, 'bABE', 18, '4th', true],
+            [108, 4, 'bABE', 20, '4th'],
+            [108, 4, 'bABE', 11, '2th', true],
+            [108, 4, 'bABE', 18, '2th', true],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 28, '1th', true],
+            [108, 4, 'bABE', 10, '4th', true],
+            [108, 4, 'bABE', 12, '4th', true],
+            [108, 4, 'bABE', 14, '4th', true],
+            [108, 4, 'bABE', 17, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 24, '8th'],
+            [108, 4, 'bABE', 11, '8th', true],
+            [108, 4, 'bABE', 18, '8th', true],
+            [108, 4, 'bABE', 21, '8th'],
+            [108, 4, 'bABE', 10, '8th', true],
+            [108, 4, 'bABE', 17, '8th', true],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 10, '4th', true],
+            [108, 4, 'bABE', 17, '4th', true],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 21, '8th'],
+            [108, 4, 'bABE', 7, '4th', true],
+            [108, 4, 'bABE', 14, '4th', true],
+            [108, 4, 'bABE', 24, '4th'],
+            // row 6
+            [108, 4, 'bABE', 9, '2th', true, '4th'],
+            [108, 4, 'bABE', 12, '2th', true, '4th'],
+            [108, 4, 'bABE', 14, '2th', true, '4th'],
+            [108, 4, 'bABE', 16, '2th', true, '4th'],
+            [108, 4, 'bABE', 32, '8th'],  // 2th->8th
+            [108, 4, 'bABE', 28, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 28, '8th'],
+            [108, 4, 'bABE', 28, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 9, '4th', true],
+            [108, 4, 'bABE', 12, '4th', true],
+            [108, 4, '', 14, '4th', true],
+            [108, 4, 'bABE', 16, '4th', true],
+            [108, 4, 'bABE', 33, '4th'],
+            [108, 4, 'bABE', 34, '1th', true],
+            [108, 4, 'bABE', 6, '2th', true],
+            [108, 4, 'bABE', 9, '2th', true],
+            [108, 4, 'bABE', 11, '2th', true],
+            [108, 4, 'bABE', 13, '8th'],  // 2th->8th
+            [108, 4, 'bABE', 30, '8th'],
+            [108, 4, 'bABE', 27, '8th'],
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 23, '8th', true],
+            [108, 4, 'bABE', 7, '2th', true],
+            [108, 4, 'bABE', 10, '2th', true],
+            [108, 4, 'bABE', 12, '2th', true],
+            [108, 4, 'bABE', 14, '8th'],  // 2th->8th
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 29, '1th', true],
+            [108, 4, 'bABE', 9, '4th', true],
+            [108, 4, 'bABE', 11, '4th', true],
+            [108, 4, 'bABE', 13, '4th', true],
+            [108, 4, 'bABE', 16, '4th'],
+            [108, 4, 'bABE', 10, '8th', true],
+            [108, 4, 'bABE', 17, '8th', true],
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 11, '8th', true],
+            [108, 4, 'bABE', 18, '8th', true],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 11, '2th', true],
+            [108, 4, 'bABE', 18, '2th', true],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 28, '1th', true],
+            [108, 4, 'bABE', 10, '1th', true],
+            [108, 4, 'bABE', 12, '4th', true],
+            [108, 4, 'bABE', 14, '4th', true],
+            [108, 4, 'bABE', 17, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 26, '8th'],
+            [108, 4, 'bABE', 11, '8th', true],
+            [108, 4, 'bABE', 18, '8th', true],
+            [108, 4, 'bABE', 21, '8th'],
+            [108, 4, 'bABE', 10, '8th', true],
+            [108, 4, 'bABE', 17, '8th', true],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 10, '8th', true],
+            [108, 4, 'bABE', 17, '8th', true],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 21, '8th'],
+            [108, 4, 'bABE', 12, '4th', true],
+            [108, 4, 'bABE', 24, '4th'],
+            [108, 4, 'bABE', 27, '1th', true],
+            [108, 4, 'bABE', 13, '4th'],  // 2th->4th
+            [108, 4, 'bABE', 23, '4th'],
+            [108, 4, 'bABE', 20, '2th', true],
+            [108, 4, 'bABE', 23, '4th'],  // 2th->4th
+            [108, 4, 'bABE', 13, '8th'],
+            [108, 4, 'bABE', 12, '8th'],
+            // row 7
+            [108, 4, 'bABE', 27, '1th', true],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, 'bABE', 23, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 11, '4th', true],
+            [108, 4, 'bABE', 18, '4th'],
+            [108, 4, 'bABE', 9, '4th', true],
+            [108, 4, 'bABE', 23, '4th'],
+            [108, 4, 'bABE', 28, '1th', true],
+            [108, 4, 'bABE', 12, '4th'],  // 2th->4th
+            [108, 4, 'bABE', 23, '4th'],
+            [108, 4, 'bABE', 19, '4th'],
+            [108, 4, 'bABE', 23, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 16, '8th'],
+            [108, 4, 'bABE', 29, '1th', true],
+            [108, 4, 'bABE', 13, '4th'],
+            [108, 4, 'bABE', 25, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 14, '8th'],
+            [108, 4, 'bABE', 13, '4th', true],
+            [108, 4, 'bABE', 20, '4th'],
+            [108, 4, 'bABE', 11, '4th', true],
+            [108, 4, 'bABE', 25, '4th'],
+            [108, 4, 'bABE', 30, '1th', true],
+            [108, 4, 'bABE', 17, '1th', true],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 14, '4th'],  // 2th->4th
+            [108, 4, 'bABE', 25, '4th'],
+            [108, 4, 'bABE', 21, '4th'],
+            [108, 4, 'bABE', 25, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 16, '8th'],
+            [108, 4, 'bABE', 31, '1th', true],
+            [108, 4, 'bABE', 15, '4th'],
+            [108, 4, 'bABE', 27, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 16, '8th'],
+            [108, 4, 'bABE', 15, '4th', true],
+            [108, 4, 'bABE', 22, '4th'],
+            [108, 4, 'bABE', 11, '4th', true],
+            [108, 4, 'bABE', 27, '4th'],
+            [108, 4, 'bABE', 32, '1th', true],
+            [108, 4, 'bABE', 14, '4th'],  // 2th->4th
+            [108, 4, 'bABE', 25, '4th'],
+            [108, 4, 'bABE', 23, '4th'],
+            [108, 4, 'bABE', 20, '4th', true],
+            [108, 4, 'bABE', 11, '4th'],
+            // row 8
+            [108, 4, 'bABE', 33, '1th', true],
+            [108, 4, '#F', 17, '1th', true],
+            [108, 4, '', 15, '1th', true],
+            [108, 4, 'bABE', 12, '8th'],  // 4th->8th
+            [108, 4, '', 29, '8th'],
+            [108, 4, 'bABE', 26, '8th'],
+            [108, 4, '#F', 24, '8th', true],
+            [108, 4, '', 15, '8th'],
+            [108, 4, 'bABE', 15, '4th', true],
+            [108, 4, '', 22, '8th'],
+            [108, 4, 'bABE', 24, '8th'],
+            [108, 4, 'bABE', 12, '4th', true],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 22, '8th'],
+            [108, 4, 'bABE', 30, '1th', true],
+            [108, 4, 'bABE', 12, '2th', true],
+            [108, 4, '', 14, '2th', true],
+            [108, 4, 'bABE', 16, '8th'],  // 2th->8th
+            [108, 4, 'bABE', 26, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, '', 21, '8th'],
+            [108, 4, 'bABE', 19, '4th'],  // 2th->4th
+            [108, 4, 'bABE', 13, '8th'],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 27, '1th', true],
+            [108, 4, 'bABE', 11, '8th', true],  // 4th->8th
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 18, '8th'],
+            [108, 4, 'bABE', 23, '8th', true],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 11, '8th', true],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 20, '8th', true],
+            [108, 4, 'bABE', 9, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 28, '1th'],
+            [108, 4, 'bABE', 12, '8th'],  // 2th->8th
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 21, '8th'],
+            [108, 4, 'bABE', 23, '8th', true],
+            [108, 4, 'bABE', 16, '8th'],
+            // row 9
+            [108, 4, 'bABE', 29, '1th', true],
+            [108, 4, 'bABE', 13, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 25, '8th', true],
+            [108, 4, 'bABE', 14, '8th'],
+            [108, 4, 'bABE', 21, '8th', true],
+            [108, 4, 'bABE', 13, '8th'],
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 22, '8th', true],
+            [108, 4, 'bABE', 11, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 30, '1th', true],
+            [108, 4, 'bABE', 18, '1th', true],
+            [108, 4, 'bABE', 17, '1th', true],
+            [108, 4, 'bABE', 14, '8th'],  // 2th->8th
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 21, '8th'],
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 21, '8th', true],
+            [108, 4, 'bABE', 16, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 25, '8th'],
+            [108, 4, 'bABE', 31, '1th', true],
+            [108, 4, 'bABE', 15, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 27, '8th'],
+            [108, 4, 'bABE', 22, '8th', true],
+            [108, 4, 'bABE', 11, '8th'],
+            [108, 4, 'bABE', 27, '8th', true],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 23, '8th', true],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 27, '8th'],
+            [108, 4, 'bABE', 24, '4th', true],
+            [108, 4, 'bABE', 11, '4th'],
+            [108, 4, 'bABE', 34, '1th', true],
+            [108, 4, 'bABE', 10, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 30, '8th'],
+            [108, 4, 'bABE', 26, '8th', true],
+            [108, 4, 'bABE', 9, '8th'],
+            [108, 4, 'bABE', 25, '8th', true],
+            [108, 4, 'bABE', 11, '8th'],
+            [108, 4, 'bABE', 21, '2th', true],
+            [108, 4, 'bABE', 11, '2th'],
+            [108, 4, 'bABE', 24, '2th', true],
+            [108, 4, 'bABE', 15, '2th', true],
+            [108, 4, 'bABE', 11, '8th'],
+            [108, 4, 'bABE', 12, '8th'],
+            [108, 4, 'bABE', 13, '4th'],
+            [108, 4, 'bABE', 23, '2th', true],
+            [108, 4, 'bABE', 17, '2th', true],
+            [108, 4, 'bABE', 12, '4th'],
+            [108, 4, '', 14, '4th'],
+            // row 10
+            [108, 4, 'bABE', 27, '1th', true],
+            [108, 4, 'bABE', 18, '2th', true],
+            [108, 4, 'bABE', 16, '2th', true],
+            [108, 4, 'bABE', 13, '4th'],  // 2th->4th
+            [108, 4, 'bABE', 23, '4th'],
+            [108, 4, 'bABE', 23, '2th', true],
+            [108, 4, 'bABE', 20, '4th'],  // 2th->4th
+            [108, 4, 'bABE', 20, '8th'],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 23, '1th', true],
+            [108, 4, 'bABE', 27, '1th', true],
+            [108, 4, 'bABE', 18, '8th'],  // 4th->8th
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 18, '4th'],
+            [108, 4, 'bABE', 16, '4th'],
+            [108, 4, 'bABE', 23, '1th', true],
+            [108, 4, 'bABE', 28, '1th', true],
+            [108, 4, 'bABE', 19, '2th'],
+            [108, 4, 'bABE', 19, '8th'],
+            [108, 4, 'bABE', 23, '8th'],
+            [108, 4, 'bABE', 22, '8th'],
+            [108, 4, 'bABE', 11, '8th'],
+            [108, 4, 'bABE', 20, '2th', true],
+            [108, 4, 'bABE', 23, '2th', true],
+            [108, 4, 'bABE', 25, '2th', true],
+            [108, 4, 'bABE', 29, '2th'],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 23, '1th', true],
+            [108, 4, 'bABE', 25, '1th', true],
+            [108, 4, 'bABE', 29, '1th', true],
+            [108, 4, 'bABE', 13, '8th'],
+            [108, 4, 'bABE', 9, '8th'],
+            [108, 4, 'bABE', 10, '8th'],
+            [108, 4, 'bABE', 9, '8th'],
+            [108, 4, 'bABE', 6, '8th'],
+            [108, 4, 'bABE', 9, '8th'],
+            [108, 4, 'bABE', 10, '8th'],
+            [108, 4, 'bABE', 9, '8th'],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 23, '1th', true],
+            [108, 4, 'bABE', 25, '1th', true],
+            [108, 4, 'bABE', 29, '1th', true],
+            [108, 4, 'bABE', 13, '8th'],
+            [108, 4, 'bABE', 9, '8th'],
+            [108, 4, 'bABE', 10, '8th'],
+            [108, 4, 'bABE', 9, '8th'],
+            [108, 4, 'bABE', 6, '8th'],
+            [108, 4, 'bABE', 9, '8th'],
+            [108, 4, 'bABE', 10, '8th'],
+            [108, 4, 'bABE', 19, '8th'],
+            // row 9
+            [108, 4, 'bABE', 13, '1th', true],
+            [108, 4, 'bABE', 20, '1th', true],
+            [108, 4, 'bABE', 23, '1th', true],
+            [108, 4, 'bABE', 25, '1th', true],
+            [108, 4, 'bABE', 29, '1th', true],
+        ];
+        const soloTimeLine2 = [
+            // node 1
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 17, '8th'],
+            // node 2
+            [75, 4, '#F', 16, '4th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 15, '4th', true],
+            [75, 4, '#F', 33, '8th'],
+            [75, 4, '#F', 29, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 19, '8th', true],
+            [75, 4, '#F', 24, '8th'],
+            // node 3
+            [75, 4, '#F', 18, '2th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 18, '8th', true],
+            [75, 4, '#F', 23, '4th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 17, '8th'],
+            // node 4
+            [75, 4, '#F', 16, '4th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 15, '4th', true],
+            [75, 4, '#F', 33, '8th'],
+            [75, 4, '#F', 29, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 19, '8th', true],
+            [75, 4, '#F', 24, '8th'],
+            // node 5
+            [75, 4, '#F', 12, '2th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 19, '4th'],
+            [75, 4, '#F', 14, '8th'],
+            [75, 4, '#F', 16, '8th'],
+            [75, 4, '#F', 15, '8th'],
+            [75, 4, '#F', 14, '8th'],
+            // node 6
+            [75, 4, '#F', 11, '4th', true],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 13, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 14, '4th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 15, '4th', true],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            // node 7
+            [75, 4, '#F', 14, '4th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 16, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 18, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 18, '8th', true],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 30, '8th'],
+            // node 8
+            [75, 4, '#F', 16, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 18, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 17, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#F', 17, '4th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            // node 9
+            [75, 4, '#F', 18, '1th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 18, '8th', true],
+            [75, 4, '#F', 21, '4th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 17, '8th'],
+            // node 10
+            [75, 4, '#F', 11, '1th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#DF', 26, '8th'],
+            // node 11
+            [75, 4, '#F', 14, '4th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 16, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 18, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 18, '8th', true],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            // node 12
+            [75, 4, '#F', 16, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 18, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 17, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#DF', 19, '4th', true],
+            [75, 4, '#DF', 26, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            // node 13
+            [75, 4, '#F', 18, '2th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 21, '4th'],
+            [75, 4, '#F', 16, '8th'],
+            [75, 4, '#F', 15, '8th'],
+            // node 14
+            [75, 4, '#F', 14, '2th', true, '4th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 16, '8th', true],
+            [75, 4, '#F', 21, '8th'],
+            // node 15
+            [75, 4, '#F', 15, '2th', true, '4th'],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 22, '8th'],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '', 31, '8th'],
+            // node 16
+            [75, 4, '#F', 13, '2th', true, '4th'],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 13, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 20, '8th'],
+            // node 17
+            [75, 4, '#F', 14, '2th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 16, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            // node 18
+            [75, 4, '#F', 11, '2th', true, '4th'],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 19, '8th'],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 11, '8th', true],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 10, '8th', true],
+            [75, 4, '#F', 18, '8th'],
+            // node 19
+            [75, 4, '#F', 9, '8th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 16, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 19, '8th', true],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 21, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            // node 20
+            [75, 4, '#F', 13, '2th', true, '4th'],
+            [75, 4, '#F', 29, '8th'],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 22, '8th'],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 18, '4th'],
+            [75, 4, '#F', 14, '4th'],
+            // node 21
+            [75, 4, '#F', 15, '2th', true, '4th'],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#F', 29, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 22, '4th'],
+            [75, 4, '#F', 16, '8th'],
+            [75, 4, '#F', 15, '8th'],
+            // node 22
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 16, '8th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 9, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 8, '8th', true],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 7, '4th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 16, '8th', true],
+            [75, 4, '#F', 21, '8th'],
+            // node 23
+            [75, 4, '#F', 15, '4th', true],
+            [75, 4, '#F', 31, '4th'],
+            [75, 4, '#F', 26, '4th'],
+            [75, 4, '#F', 8, '16th', true],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 7, '16th'],
+            [75, 4, '#F', 8, '16th'],
+            [75, 4, '#F', 7, '16th', true],
+            [75, 4, '#F', 22, '8th'],
+            [75, 4, '#F', 8, '4th', true],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '', 31, '8th'],
+            // node 24
+            [75, 4, '#F', 13, '4th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 6, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 7, '8th', true],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 6, '8th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 13, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 20, '8th'],
+            // node 25
+            [75, 4, '#F', 14, '4th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 4, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 5, '8th', true],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 6, '8th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 7, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 8, '8th', true],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 9, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            // node 26
+            [75, 4, '#F', 11, '4th', true],
+            [75, 4, '#F', 26, '4th', true],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 9, '8th', true],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 6, '8th', true],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 4, '8th', true],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 16, '8th', true],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 18, '8th'],
+            // node 27
+            [75, 4, '#F', 14, '4th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 9, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 5, '8th', true],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 6, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 7, '8th', true],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 8, '8th', true],
+            [75, 4, '#F', 13, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 9, '8th', true],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 26, '8th'],
+            // node 28
+            [75, 4, '#F', 13, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 14, '4th', true],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 15, '4th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 16, '8th', true],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 20, '8th'],
+            // node 29
+            [75, 4, '#F', 14, '2th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#DF', 26, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 22, '4th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 17, '8th'],
+            // node 30
+            [75, 4, '#F', 16, '4th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 15, '4th', true],
+            [75, 4, '#F', 33, '8th'],
+            [75, 4, '#F', 29, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 19, '8th', true],
+            [75, 4, '#F', 24, '8th'],
+            // node 31
+            [75, 4, '#F', 18, '2th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 18, '8th', true],
+            [75, 4, '#F', 23, '4th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 17, '8th'],
+            // node 32
+            [75, 4, '#F', 16, '4th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 15, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 14, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 15, '4th', true],
+            [75, 4, '#F', 33, '8th'],
+            [75, 4, '#F', 29, '8th'],
+            [75, 4, '#F', 17, '8th', true],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 19, '8th', true],
+            [75, 4, '#F', 24, '8th'],
+            // node 33
+            [75, 4, '#F', 12, '2th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 19, '4th'],
+            [75, 4, '#F', 7, '8th', true],
+            [75, 4, '#F', 12, '8th'],
+            [75, 4, '#F', 6, '8th'],
+            [75, 4, '#F', 5, '8th'],
+            // node 34
+            [75, 4, '#F', 4, '4th', true],
+            [75, 4, '#F', 9, '4th', true],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 5, '8th', true],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 6, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 7, '4th', true],
+            [75, 4, '#F', 12, '4th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 8, '4th', true],
+            [75, 4, '#F', 13, '4th', true],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            // node 35
+            [75, 4, '#F', 7, '4th', true],
+            [75, 4, '#F', 12, '4th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 9, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 10, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 11, '4th', true],
+            [75, 4, '#F', 16, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 11, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 10, '8th', true],
+            [75, 4, '#F', 30, '8th'],
+            // node 36
+            [75, 4, '#F', 9, '4th', true],
+            [75, 4, '#F', 14, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 10, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 11, '8th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 10, '4th', true],
+            [75, 4, '#F', 15, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#F', 10, '4th', true],
+            [75, 4, '#F', 15, '4th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 31, '8th'],
+            // node 37
+            [75, 4, '#F', 11, '2th', true],
+            [75, 4, '#F', 16, '2th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 21, '4th'],
+            [75, 4, '#F', 14, '8th'],
+            [75, 4, '#F', 11, '8th'],
+            [75, 4, '#F', 10, '8th'],
+            // node 38
+            [75, 4, '#F', 9, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 8, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 7, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 8, '8th', true],
+            [75, 4, '#F', 33, '8th'],
+            [75, 4, '#F', 29, '8th'],
+            [75, 4, '#F', 8, '4th', true],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 5, '8th', true],
+            [75, 4, '#F', 24, '8th'],
+            // node 39
+            [75, 4, '#F', 7, '2th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 19, '4th'],
+            [75, 4, '#F', 14, '8th'],
+            [75, 4, '#F', 11, '8th'],
+            [75, 4, '#F', 10, '8th'],
+            // node 40
+            [75, 4, '#F', 9, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 8, '8th', true],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 7, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 8, '4th', true],
+            [75, 4, '#F', 33, '8th'],
+            [75, 4, '#F', 29, '8th'],
+            [75, 4, '#F', 8, '8th', true],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 5, '8th', true],
+            [75, 4, '#F', 24, '8th'],
+            // node 41
+            [75, 4, '#F', 7, '2th', true],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 26, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 7, '8th', true],
+            [75, 4, '#F', 12, '8th', true],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 6, '8th', true],
+            [75, 4, '#F', 19, '8th'],
+            [75, 4, '#F', 5, '8th'],
+            // node 42
+            [75, 4, '#F', 4, '2th', true],
+            [75, 4, '#F', 9, '2th'],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 5, '8th', true],
+            [75, 4, '#F', 10, '8th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 6, '8th', true],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#F', 7, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 8, '8th', true],
+            [75, 4, '#DF', 26, '8th'],
+            // node 43
+            [75, 4, '#F', 7, '4th', true],
+            [75, 4, '#F', 12, '4th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 9, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 10, '8th', true],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 11, '8th', true],
+            [75, 4, '#F', 16, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 30, '8th'],
+            [75, 4, '#F', 11, '8th', true],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 10, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            // node 44
+            [75, 4, '#F', 9, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 10, '8th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 11, '8th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 10, '4th', true],
+            [75, 4, '#F', 34, '8th'],
+            [75, 4, '#F', 31, '8th'],
+            [75, 4, '#DF', 12, '4th', true],
+            [75, 4, '#DF', 26, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            // node 45
+            [75, 4, '#F', 11, '2th', true],
+            [75, 4, '#F', 32, '8th'],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 4, '8th', true],
+            [75, 4, '#F', 9, '8th'],
+            [75, 4, '#F', 3, '8th', true],
+            [75, 4, '#F', 8, '8th'],
+            // node 46
+            [75, 4, '#F', 2, '4th', true],
+            [75, 4, '#F', 7, '4th', true],
+            [75, 4, '#F', 27, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 3, '8th', true],
+            [75, 4, '#F', 20, '8th'],
+            [75, 4, '#F', 4, '8th', true],
+            [75, 4, '#F', 18, '8th'],
+            [75, 4, '#F', 3, '4th', true],
+            [75, 4, '#F', 8, '4th', true],
+            [75, 4, '#F', 28, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#DF', 5, '4th', true],
+            [75, 4, '#F', 10, '4th', true],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#DF', 19, '8th'],
+            // node 47
+            [75, 4, '#F', 4, '2th', true],
+            [75, 4, '#F', 9, '2th', true],
+            [75, 4, '#F', 25, '8th'],
+            [75, 4, '#F', 24, '8th'],
+            [75, 4, '#F', 23, '8th'],
+            [75, 4, '#F', 21, '8th'],
+            [75, 4, '#F', 11, '2th', true],
+            [75, 4, '#F', 14, '2th', true],
+            [75, 4, '#F', 18, '2th', true],
+            [75, 4, '#F', 25, '2th', true],
+            [75, 4, '#F', 32, '2th'],
+            // node 48
+            [75, 4, '#F', 11, '2th', true],
+            [75, 4, '#F', 14, '2th', true],
+            [75, 4, '#F', 18, '2th', true],
+            [75, 4, '#F', 25, '2th', true],
+            [75, 4, '#F', 32, '2th'],
+        ];
+        const soloTimeLine3 = [
+            // bpm, denominator, transform, line, noteName, persist
+            // node 1
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 22, '4th'],
+            // node 2
+            [120, 4, 'bEB', 21, '2th'],
+            [120, 4, 'bEB', 20, '2th'],
+            [120, 4, 'bEB', 20, '4th'],
+            // node 3
+            [120, 4, 'bEB', 19, '4th'],
+            // node 4
+            [120, 4, 'bEB', 22, '4th'],
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 24, '4th'],
+            // node 5
+            [120, 4, 'bEB', 23, '2th'],
+            // node 6
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 22, '4th'],
+            // node 7
+            [120, 4, 'bEB', 21, '2th'],
+            [120, 4, 'bEB', 21, '2th'],
+            [120, 4, 'bEB', 21, '4th'],
+            // node 8
+            [120, 4, 'bEB', 19, '2th'],
+            // node 9
+            [120, 4, 'bEB', 22, '4th'],
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 24, '4th'],
+            // node 10
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 21, '4th'],
+            [120, 4, 'bEB', 20, '4th'],
+            // node 11
+            [120, 4, 'bEB', 19, '2th'],
+            [120, 4, 'bEB', 17, '2th'],
+            [120, 4, 'bEB', 17, '4th'],
+            // node 12
+            [120, 4, 'bEB', 16, '4th'],
+            // node 13
+            [120, 4, '', 18, '4th'],
+            [120, 4, 'bEB', 19, '4th'],
+            [120, 4, 'bEB', 20, '4th'],
+            // node 14
+            [120, 4, 'bEB', 19, '2th'],
+            // node 15
+            [120, 4, 'bEB', 21, '2th'],
+            // node 16
+            [120, 4, 'bEB', 21, '4th'],
+            [120, 4, 'bEB', 21, '4th'],
+            [120, 4, 'bEB', 20, '2th'],
+            // node 17
+            [120, 4, 'bEB', 19, '2th'],
+            [120, 4, 'bEB', 16, '2th'],
+            [120, 4, 'bEB', 16, '4th'],
+            // node 18
+            [120, 4, 'bEB', 15, '4th'],
+            // node 19
+            [120, 4, 'bEB', 17, '4th'],
+            [120, 4, '', 18, '4th'],
+            [120, 4, 'bEB', 20, '4th'],
+            // node 20
+            [120, 4, 'bEB', 19, '2th'],
+            // node 21
+            // node 22
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 22, '4th'],
+            // node 23
+            [120, 4, 'bEB', 21, '2th'],
+            [120, 4, 'bEB', 20, '2th'],
+            [120, 4, 'bEB', 20, '4th'],
+            // node 24
+            [120, 4, 'bEB', 19, '4th'],
+            // node 25
+            [120, 4, 'bEB', 22, '4th'],
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 24, '4th'],
+            // node 26
+            [120, 4, 'bEB', 23, '2th'],
+            // node 27
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 22, '4th'],
+            // node 28
+            [120, 4, 'bEB', 21, '2th'],
+            [120, 4, 'bEB', 20, '2th'],
+            [120, 4, 'bEB', 20, '4th'],
+            // node 29
+            [120, 4, 'bEB', 19, '4th'],
+            // node 30
+            [120, 4, 'bEB', 22, '4th'],
+            [120, 4, 'bEB', 23, '4th'],
+            [120, 4, 'bEB', 24, '4th'],
+            // node 31
+            [120, 4, 'bEB', 23, '1th', false, '2th'],
+            // node 32
+            // node 33
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            // node 34
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            [120, 4, 'bEB', 14, '4th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            // node 35
+            [120, 4, 'bEB', 15, '4th'],
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 16, '8th'],
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 14, '8th'],
+            // node 36
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 19, '8th'],
+            [120, 4, 'bEB', 19, '2th'],
+            // node 37
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            // node 38
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            [120, 4, 'bEB', 14, '4th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            // node 39
+            [120, 4, 'bEB', 15, '4th'],
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 16, '8th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 15, '8th'],
+            // node 40
+            [120, 4, 'bEB', 19, '4th'],
+            [120, 4, 'bEB', 19, '8th'],
+            [120, 4, 'bEB', 20, '8th'],
+            [120, 4, 'bEB', 17, '8th'],
+            [120, 4, 'bEB', 18, '8th'],
+            // node 41 switch
+            [120, 4, 'bFA', 23, '2th', false, '4th'],
+            [120, 4, 'bFA', 27, '2th', false, '4th'],
+            [120, 4, 'bFA', 24, '2th', false, '4th'],
+            [120, 4, 'bFA', 28, '2th', false, '4th'],
+            [120, 4, 'bFA', 23, '2th', false, '4th'],
+            [120, 4, 'bFA', 27, '2th', false, '4th'],
+            [120, 4, 'bFA', 24, '2th', false, '4th'],
+            [120, 4, 'bFA', 28, '2th', false, '4th'],
+            [120, 4, 'bFA', 25, '2th', false, '4th'],
+            [120, 4, 'bFA', 25, '2th', false, '4th'],
+            [120, 4, 'bFA', 25, '1th'],
+            // node 42
+            [120, 4, 'bEB', 16, '4th'],
+            [120, 4, 'bEB', 16, '4th'],
+            [120, 4, 'bEB', 15, '4th'],
+            // node 43
+            [120, 4, 'bEB', 14, '2th'],
+            [120, 4, 'bEB', 13, '2th'],
+            [120, 4, 'bEB', 13, '4th'],
+            // node 44
+            [120, 4, 'bEB', 12, '4th'],
+            // node 45
+            [120, 4, 'bEB', 15, '4th'],
+            [120, 4, 'bEB', 16, '4th'],
+            [120, 4, 'bEB', 17, '4th'],
+            // node 46
+            [120, 4, 'bEB', 16, '2th'],
+            // node 47
+            [120, 4, 'bEB', 16, '4th'],
+            [120, 4, 'bEB', 16, '4th'],
+            [120, 4, 'bEB', 15, '4th'],
+            // node 43
+            [120, 4, 'bEB', 14, '2th'],
+            [120, 4, 'bEB', 13, '2th'],
+            [120, 4, 'bEB', 13, '4th'],
+            // node 44
+            [120, 4, 'bEB', 12, '4th'],
+            // node 45
+            [120, 4, 'bEB', 15, '4th'],
+            [120, 4, 'bEB', 16, '4th'],
+            [120, 4, 'bEB', 17, '4th'],
+            // node 46
+            [120, 4, 'bEB', 16, '1th'],
+            [120, 4, 'bEB', 16, '2th'],
+            // node 47
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            // node 48
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            [120, 4, 'bEB', 14, '4th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            // node 49
+            [120, 4, 'bEB', 15, '4th'],
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 16, '8th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 15, '8th'],
+            // node 50
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 19, '8th'],
+            [120, 4, 'bEB', 19, '2th'],
+            // node 51
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            // node 52
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            [120, 4, 'bEB', 14, '4th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            // node 53
+            [120, 4, 'bEB', 15, '4th'],
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 16, '8th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 15, '8th'],
+            // node 54
+            [120, 4, 'bEB', 19, '8th'],
+            [120, 4, 'bEB', 20, '8th'],
+            [120, 4, 'bEB', 20, '2th'],
+            // node 55
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            // node 56
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            [120, 4, 'bEB', 14, '4th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            // node 57
+            [120, 4, 'bEB', 15, '4th'],
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 16, '8th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 15, '8th'],
+            // node 58
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 19, '8th'],
+            [120, 4, 'bEB', 19, '2th'],
+            // node 59
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 11, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            // node 60
+            [120, 4, 'bEB', 13, '8th'],
+            [120, 4, 'bEB', 12, '8th'],
+            [120, 4, 'bEB', 14, '4th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 13, '8th'],
+            // node 61
+            [120, 4, 'bEB', 15, '4th'],
+            [120, 4, 'bEB', 15, '8th'],
+            [120, 4, 'bEB', 16, '8th'],
+            [120, 4, 'bEB', 14, '8th'],
+            [120, 4, 'bEB', 15, '8th'],
+            // node 62
+            [120, 4, 'bEB', 19, '8th'],
+            [120, 4, 'bEB', 20, '8th'],
+            [120, 4, 'bEB', 20, '2th'],
+        ];
+        function restartSolo() {
+            clearTimer();
+            resetLines();
+            if (!soloModeEnabled) return;
+            setTimeout(function() {
+                let soloTimeLineCopy = null;
+                let soloEnabled = document.querySelector('.solo.enabled');
+                if (soloEnabled.classList.contains('solo-1')) soloTimeLineCopy = soloTimeLine1.slice();
+                if (soloEnabled.classList.contains('solo-2')) soloTimeLineCopy = soloTimeLine2.slice();
+                if (soloEnabled.classList.contains('solo-3')) soloTimeLineCopy = soloTimeLine3.slice();
+                soloLoop(soloTimeLineCopy);
+            }, 0);
+        }
+        function soloLoop(soloTimeLine) {
+            if (!soloModeEnabled) return;
+            if (!soloTimeLine.length) return restartSolo();
+            const [bpm, denominator, transform, line, noteName, chord=false, persist=0] = soloTimeLine.shift();
+            const beatsTime = (1 / (bpm / 60)) * 1000;
+            const persistTime = persist ? denominator / ~~persist.slice(0, 1) * beatsTime : 0;
+            let nextTime = 0;
+            if (!chord) nextTime = denominator / ~~noteName.slice(0, 1) * beatsTime + persistTime;
+            setTimeout(function() {
+                visualizeLine(line, true, true, noteName, chord);
+                const audioName = playAudio(line, transform);
+                console.log(`egg, ${transform}, ${line}, ${noteName}, ${audioName}, ${persist}`);
+                soloLoop(soloTimeLine);
+            }, nextTime);
+        }
+        function visualizeLine(lineNum, highEnabled, lowEnabled, noteName, chord) {
+            let note = null;
+            const noteDirection = noteDirectionFromLineNum(lineNum);
+            if (soloModeEnabled) {
+                let existNotes = document.querySelectorAll('svg[class^="note-"]');
+                let existLength = existNotes.length;
+                const maxNoteCount = smallScreen ? 5 : 12;
+                if (existLength > maxNoteCount) {
+                    existNotes.forEach(note => note.remove());
+                    existLength = 0;
+                }
+                note = noteNameDict[noteName + '-' + noteDirection].cloneNode(true);
+                const maxRight = smallScreen ? 60 : 80;
+                if (chord) note.style.right = (maxRight - (maxRight / maxNoteCount * existLength - 1)) + '%';
+                else note.style.right = (maxRight - (maxRight / maxNoteCount * existLength)) + '%';
+                note.style.top = 93 / (16 * 2) * lineNum + '%';
+                note.classList.add('solo-note');
+                setTimeout(function() {
+                    // delay to fadein
+                    note.style.opacity = '1';
+                }, 50);
+            } else {
+                const notePull = notePollFromDirection(noteDirection);
+                note = notePull[Math.floor(Math.random() * notePull.length)];
+                const layoutNum = lineNum < 20 || !highEnabled ? Math.floor(lineNum / 2) : Math.ceil(lineNum / 2);
+                const noteLeft = lineLayout[layoutNum][0][0];
+                const noteRight = lineLayout[layoutNum][1][0];
+                let maxRight = 100, minRight = 0;
+                if (noteLeft) minRight = noteRight ? minRight : 100 - noteLeft;
+                if (noteRight) maxRight = noteLeft ? maxRight : noteRight;
+                if (!highEnabled) maxRight = noteRight ? noteRight : 100;
+                if (!lowEnabled) minRight = noteLeft ? 100 - noteLeft : 0;
+                maxRight = maxRight > 70 ? maxRight - 10 : maxRight <= 30 ? maxRight - 5 : maxRight;
+                note.style.right = Math.floor(Math.random() * (maxRight - minRight + 1)) + minRight + '%';
+                note.style.top = 93 / (16 * 2) * lineNum + '%';
+            }
+            visualSection.append(note);
+        }
+    }
+</script>
+</body>
+</html>
+
+<template id="line">
+    <div class="line-wrapper">
+        <span class="line-left"></span>
+        <span class="line-right"></span>
+    </div>
+</template>
+
+<!-- music note -->
+<template id="symbol-high">
+    <svg class="symbol-high" height="19%" overflow="visible" viewBox="-100 0 100 1400">
+        <g transform="matrix(1.3 0 0 1 0 0)">
+            <path transform="scale(1,-1)"
+                  d="M562 -21c0 89 -65 150 -155 150c7 -44 34 -203 55 -323c71 29 100 102 100 173zM420 -206l-58 329c-59 -14 -104 -63 -104 -124c0 -49 22 -75 61 -99c12 -8 22 -13 22 -22s-9 -13 -17 -13c-80 0 -135 96 -135 166c0 94 62 190 153 217c-7 41 -14 88 -23 142 c-15 -15 -31 -29 -48 -44c-88 -76 -174 -185 -174 -307c0 -151 122 -251 265 -251c19 0 38 2 58 6zM332 822c-8 -31 -11 -65 -11 -102c0 -42 5 -81 11 -121c69 68 146 146 146 250c0 69 -24 118 -39 118c-52 0 -98 -105 -107 -145zM122 -513c0 66 45 123 115 123 c75 0 116 -57 116 -111c0 -64 -47 -104 -94 -111c-3 -1 -5 -2 -5 -4c0 -1 2 -2 3 -3c2 0 23 -5 47 -5c101 0 154 55 154 159c0 53 -11 123 -30 219c-23 -4 -50 -7 -79 -7c-186 0 -349 147 -349 334c0 200 126 321 217 406c21 17 73 70 74 71c-17 112 -22 161 -22 215 c0 84 18 212 82 288c33 39 64 51 71 51c18 0 47 -35 71 -86c16 -36 44 -110 44 -201c0 -159 -73 -284 -179 -395c9 -56 19 -115 29 -175c146 0 253 -102 253 -253c0 -103 -73 -205 -171 -237c6 -39 12 -69 15 -89c10 -57 16 -102 16 -141c0 -63 -14 -129 -68 -167 c-36 -22 -77 -34 -124 -34c-135 0 -186 87 -186 153z"/>
+        </g>
+    </svg>
+</template>
+<template id="symbol-low">
+    <svg class="symbol-low" height="19%" overflow="visible" viewBox="-60 0 671 772">
+        <g transform="matrix(0.9 0 0 -1 0 0)">
+            <path
+                    d="M567 -386c0,29,23,52,52,52s52,-23,52,-52s-23,-52,-52,-52s-52,23,-52,52z
+m0,250c0,29,23,52,52,52s52,-23,52,-52s-23,-52,-52,-52s-52,23,-52,52z
+m-323,136
+c171,0,292,-86,292,-248c0,-263,-264,-415,-517,-521c-2,-2,-5,-3,-8,-3c-6,0,-11,5,-11,11c0,3,1,6,3,8c203,118,415,265,415,494c0,121,-64,237,-174,237c-79,0,-138,-57,-164,-133
+c14,8,28,13,43,13c55,0,100,-45,100,-100c0,-58,-44,-107,-100,-107c-60,0,-112,48,-112,107c0,132,103,242,233,242z"/>
+        </g>
+    </svg>
+</template>
+<template id="symbol-bracket">
+    <svg class="symbol-bracket" height="20%" overflow="visible" viewBox="7 32 10 30">
+        <g transform="scale(0.6, 1)">
+            <path d="M 2.5255237,42.511266 C 2.9018235,41.543703 2.9183988,40.479268 2.9295801,39.441167 3.0257633,30.51126 3.0823959,21.580072 2.947325,12.650669 2.9231886,11.055039 2.8933167,9.4523308 3.1035398,7.8704257 3.3137629,6.2885207 3.7758163,4.7150177 4.6625942,3.3882765 5.8680949,1.5846823 7.8548731,0.32344155 10,0 9.1651831,0.77722338 8.4802709,1.7148791 7.9937845,2.746541 6.9576584,4.9437899 6.8533308,7.4514513 6.8235522,9.8805609 6.7206706,18.272857 7.2905092,26.672179 6.8823909,35.055177 6.8167718,36.403033 6.7250316,37.755886 6.4343209,39.073653 6.1436102,40.39142 5.6454801,41.680731 4.8313656,42.756947 4.0971435,43.727549 3.1128448,44.507326 2,45 c 1.2050792,0.603993 2.2555169,1.513477 3.0257355,2.619726 0.967061,1.388969 1.4785617,3.053394 1.7173188,4.728935 0.2387572,1.675541 0.2181075,3.375775 0.2046929,5.068188 -0.065798,8.301234 0.054193,16.603325 -0.040718,24.904278 -0.019251,1.683679 -0.035532,3.428545 0.6452292,4.968581 C 8.0528414,88.422141 8.9242492,89.387018 10,90 8.1813551,89.702562 6.4820251,88.725349 5.3102118,87.3031 4.2259102,85.987066 3.606374,84.337657 3.2912749,82.661838 2.9761757,80.986019 2.9488582,79.270938 2.9359838,77.565801 2.869984,68.824508 3.1582519,60.082204 3.0067424,51.341975 2.9840763,50.034421 2.9431715,48.687654 2.4144109,47.491567 1.9369295,46.411476 1.0645415,45.51121 0,45 1.1412417,44.575325 2.0841488,43.646153 2.5255237,42.511266"></path>
+        </g>
+    </svg>
+</template>
+<template id="note-1th">
+    <svg class="note-1th" height="6%" overflow="visible" style="isolation:isolate"
+         viewBox="584 300 460.17404 308.906071">
+        <path
+                d=" M 736.157 469.328 C 669.319 453.47 621.61 419.231 600.87 379.089 C 591.117 360.931 585.34 341.133 584.04 320.523 C 584.02 320.21 584.022 319.931 584.017 319.634 C 583.625 296.614 589.795 274.872 608.669 250.32 C 625.977 227.68 652.475 208.285 686.737 193.388 C 722.963 177.573 765.902 169.736 812.173 171.166 C 821.584 171.457 830.862 172.118 839.977 173.126 C 849.884 174.138 859.597 175.566 869.075 177.381 C 887.492 180.409 905.026 184.995 921.384 190.933 C 937.469 196.539 952.227 203.268 966.739 211.958 C 979.573 219.644 989.579 227.192 999.4 236.322 C 1004.321 241.084 1008.894 246.043 1013.088 251.179 C 1016.396 255.363 1019.471 259.632 1022.298 263.975 C 1025.437 269.026 1028.208 273.869 1030.793 279.353 C 1039.259 297.31 1043.713 317.693 1044.174 334.941 C 1044.186 369.107 1026.833 399.832 997.813 424.069 C 976.427 442.703 950.811 456.613 917.646 467.012 C 892.937 474.76 867.18 478.943 841.601 479.684 C 833.13 480.113 826.59 479.803 817.976 479.721 C 788.949 478.785 761.439 475.194 736.157 469.328 Z  M 880 426 C 884.439 422.563 887.498 419.393 892.172 413.88 C 900.263 404.336 905.631 394.806 908.988 382.245 C 909.366 381.015 909.707 379.779 910.01 378.537 C 910.744 375.636 911.273 372.716 911.613 369.788 C 912.303 360.234 911.772 348.99 908.918 338.156 C 908.192 335.012 907.499 332.072 906.819 329.267 C 903.9 316.251 901.08 306.289 896.299 292.811 C 896.016 292.052 895.652 290.912 895.36 290.153 C 885.262 263.878 874.815 245.939 860.044 232.581 C 839.908 213.567 810.25 202.935 778.593 212.643 C 765.916 216.531 755.354 223.116 748.352 230.254 C 744.273 234.338 740.296 239.404 737.208 244.338 C 729.377 256.936 725.607 266.484 724.349 279.906 C 724.073 284.64 723.76 290.393 724.349 295.906 C 725.325 302.083 725.918 307.259 727.174 313.216 C 730.677 331.191 735.654 347.597 739.613 359.913 C 739.658 360.053 739.697 360.196 739.739 360.337 C 741.63 366.657 743.907 372.677 746.516 378.375 C 748.66 383.297 751.315 388.92 753.879 393.349 C 755.602 396.459 757.417 399.488 759.291 402.349 C 762.507 407.293 765.564 410.736 769.038 414.677 C 774.534 420.719 780.307 425.605 786.279 429.473 C 795.651 435.191 805.329 438.647 815.045 440.317 C 832.87 443.994 852.773 440.855 863.266 435.878 C 870.222 432.579 873.953 430.682 880 426 Z "
+                fill-rule="evenodd" fill="rgb(0,0,0)"/>
+    </svg>
+</template>
+<template id="note-1th-down">
+    <svg class="note-1th-down" height="6%" overflow="visible" style="isolation:isolate"
+         viewBox="584 300 460.17404 308.906071">
+        <path
+                d=" M 736.157 469.328 C 669.319 453.47 621.61 419.231 600.87 379.089 C 591.117 360.931 585.34 341.133 584.04 320.523 C 584.02 320.21 584.022 319.931 584.017 319.634 C 583.625 296.614 589.795 274.872 608.669 250.32 C 625.977 227.68 652.475 208.285 686.737 193.388 C 722.963 177.573 765.902 169.736 812.173 171.166 C 821.584 171.457 830.862 172.118 839.977 173.126 C 849.884 174.138 859.597 175.566 869.075 177.381 C 887.492 180.409 905.026 184.995 921.384 190.933 C 937.469 196.539 952.227 203.268 966.739 211.958 C 979.573 219.644 989.579 227.192 999.4 236.322 C 1004.321 241.084 1008.894 246.043 1013.088 251.179 C 1016.396 255.363 1019.471 259.632 1022.298 263.975 C 1025.437 269.026 1028.208 273.869 1030.793 279.353 C 1039.259 297.31 1043.713 317.693 1044.174 334.941 C 1044.186 369.107 1026.833 399.832 997.813 424.069 C 976.427 442.703 950.811 456.613 917.646 467.012 C 892.937 474.76 867.18 478.943 841.601 479.684 C 833.13 480.113 826.59 479.803 817.976 479.721 C 788.949 478.785 761.439 475.194 736.157 469.328 Z  M 880 426 C 884.439 422.563 887.498 419.393 892.172 413.88 C 900.263 404.336 905.631 394.806 908.988 382.245 C 909.366 381.015 909.707 379.779 910.01 378.537 C 910.744 375.636 911.273 372.716 911.613 369.788 C 912.303 360.234 911.772 348.99 908.918 338.156 C 908.192 335.012 907.499 332.072 906.819 329.267 C 903.9 316.251 901.08 306.289 896.299 292.811 C 896.016 292.052 895.652 290.912 895.36 290.153 C 885.262 263.878 874.815 245.939 860.044 232.581 C 839.908 213.567 810.25 202.935 778.593 212.643 C 765.916 216.531 755.354 223.116 748.352 230.254 C 744.273 234.338 740.296 239.404 737.208 244.338 C 729.377 256.936 725.607 266.484 724.349 279.906 C 724.073 284.64 723.76 290.393 724.349 295.906 C 725.325 302.083 725.918 307.259 727.174 313.216 C 730.677 331.191 735.654 347.597 739.613 359.913 C 739.658 360.053 739.697 360.196 739.739 360.337 C 741.63 366.657 743.907 372.677 746.516 378.375 C 748.66 383.297 751.315 388.92 753.879 393.349 C 755.602 396.459 757.417 399.488 759.291 402.349 C 762.507 407.293 765.564 410.736 769.038 414.677 C 774.534 420.719 780.307 425.605 786.279 429.473 C 795.651 435.191 805.329 438.647 815.045 440.317 C 832.87 443.994 852.773 440.855 863.266 435.878 C 870.222 432.579 873.953 430.682 880 426 Z "
+                fill-rule="evenodd" fill="rgb(0,0,0)"/>
+    </svg>
+</template>
+<template id="note-2th">
+    <svg class="note-2th" height="38%" viewBox="-30 175 110.22377 324.68739" overflow="visible">
+        <defs id="defs4522"/>
+        <g transform="matrix(7.2975887,-3.7032088,9.40463,3.2826227,-5949.6396,-992.59403)"
+           style="fill:#000000;fill-opacity:1;stroke-width:0.13042951">
+        </g>
+        <g transform="translate(604.45469,-0.06004399)" id="g15591">
+            <g transform="matrix(6.8241963,0.63850265,-0.66434486,7.2989692,-1425.0983,-3873.4571)"
+                    style="fill:#000000;fill-opacity:1;stroke-width:0.14109188"
+                    id="g2900-6">
+                <path
+                        d="m 183.32825,537.99494 c -0.0782,0.79555 -0.68256,1.40368 -1.19687,1.96109 -1.15225,1.10754 -2.56427,1.99311 -4.12017,2.36584 -0.46096,0.0803 -1.20431,0.15743 -1.33738,-0.44577 -0.12869,-0.63823 0.34991,-1.19826 0.71087,-1.67032 0.93637,-1.0914 2.16336,-1.90662 3.46138,-2.49046 0.67552,-0.25498 1.46154,-0.57669 2.16957,-0.26786 0.19352,0.1094 0.32686,0.31899 0.3126,0.54748 z m -1.93652,-1.64694 c -1.75837,0.0126 -3.42696,0.98907 -4.51076,2.35816 -0.72453,0.93873 -1.20559,2.29898 -0.61753,3.42466 0.4431,0.90504 1.50068,1.264 2.44275,1.21234 1.62491,-0.0343 3.13171,-0.9351 4.20842,-2.12448 0.79704,-0.91485 1.38444,-2.23856 0.92279,-3.44802 -0.33386,-0.88056 -1.25008,-1.39227 -2.15405,-1.41323 -0.0971,-0.006 -0.19439,-0.009 -0.29162,-0.009 z"
+                        style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.30129233;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                        id="path2906-1"/>
+            </g>
+            <path
+                    id="path5118-4-86"
+                    d="m -526.5809,0.06004775 0.17073,83.22267525 0.18458,89.798607 -7.1845,-6.57594 L -532.81253,3.7562849e-6 Z"
+                    style="opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3.7795279;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke fill markers"/>
+        </g>
+    </svg>
+</template>
+<template id="note-2th-down">
+    <svg class="note-2th-down" height="38%" viewBox="1080 -185 110.22377 324.68739" overflow="visible" >
+        <defs id="defs4522"/>
+        <g transform="translate(604.45469,-0.06004399) rotate(180)" id="g15591">
+            <g transform="matrix(6.8241963,0.63850265,-0.66434486,7.2989692,-1425.0983,-3873.4571)"
+                    style="fill:#000000;fill-opacity:1;stroke-width:0.14109188"
+                    id="g2900-6">
+                <path
+                        d="m 183.32825,537.99494 c -0.0782,0.79555 -0.68256,1.40368 -1.19687,1.96109 -1.15225,1.10754 -2.56427,1.99311 -4.12017,2.36584 -0.46096,0.0803 -1.20431,0.15743 -1.33738,-0.44577 -0.12869,-0.63823 0.34991,-1.19826 0.71087,-1.67032 0.93637,-1.0914 2.16336,-1.90662 3.46138,-2.49046 0.67552,-0.25498 1.46154,-0.57669 2.16957,-0.26786 0.19352,0.1094 0.32686,0.31899 0.3126,0.54748 z m -1.93652,-1.64694 c -1.75837,0.0126 -3.42696,0.98907 -4.51076,2.35816 -0.72453,0.93873 -1.20559,2.29898 -0.61753,3.42466 0.4431,0.90504 1.50068,1.264 2.44275,1.21234 1.62491,-0.0343 3.13171,-0.9351 4.20842,-2.12448 0.79704,-0.91485 1.38444,-2.23856 0.92279,-3.44802 -0.33386,-0.88056 -1.25008,-1.39227 -2.15405,-1.41323 -0.0971,-0.006 -0.19439,-0.009 -0.29162,-0.009 z"
+                        style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.30129233;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                        id="path2906-1"/>
+            </g>
+            <path
+                    id="path5118-4-86"
+                    d="m -526.5809,0.06004775 0.17073,83.22267525 0.18458,89.798607 -7.1845,-6.57594 L -532.81253,3.7562849e-6 Z"
+                    style="opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3.7795279;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke fill markers"/>
+        </g>
+    </svg>
+</template>
+<template id="note-4th">
+    <svg class="note-4th" height="36%" viewBox="-85 35 100 70" overflow="visible">
+        <defs id="defs1500"/>
+        <g transform="matrix(-1,0,0,-1,313.2829,340.3223)">
+            <path
+                    d="M 303.13715,299.65106 C 299.74131,301.47103 297.93187,304.76561 299.04493,307.24402 C 300.23219,309.88766 304.31194,310.63374 308.15151,308.90939 C 311.99107,307.18503 314.14367,303.63999 312.95641,300.99636 C 311.76914,298.35272 307.6894,297.60664 303.84983,299.33099 C 303.60986,299.43876 303.36355,299.52973 303.13715,299.65106 z "
+                    style="opacity:0.9;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dashoffset:0;stroke-opacity:1"
+                    id="path11031"/>
+            <path
+                    d="M 299.50465,305.98445 L 299.50465,339.57202"
+                    style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                    id="path11033"/>
+        </g>
+    </svg>
+</template>
+<template id="note-4th-down">
+    <svg class="note-4th-down" height="36%" viewBox="527 643 100 70" overflow="visible">
+        <defs id="defs1500"/>
+        <g transform="matrix(-1,0,0,-1,313.2829,340.3223) rotate(180)">
+            <path
+                    d="M 303.13715,299.65106 C 299.74131,301.47103 297.93187,304.76561 299.04493,307.24402 C 300.23219,309.88766 304.31194,310.63374 308.15151,308.90939 C 311.99107,307.18503 314.14367,303.63999 312.95641,300.99636 C 311.76914,298.35272 307.6894,297.60664 303.84983,299.33099 C 303.60986,299.43876 303.36355,299.52973 303.13715,299.65106 z "
+                    style="opacity:0.9;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dashoffset:0;stroke-opacity:1"
+                    id="path11031"/>
+            <path
+                    d="M 299.50465,305.98445 L 299.50465,339.57202"
+                    style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                    id="path11033"/>
+        </g>
+    </svg>
+</template>
+<template id="note-8th">
+    <svg class="note-8th" height="37%" viewBox="-30 76 100 140" overflow="visible">
+        <path d="M 23.7,87.9 C 18.1,82.8 21.2,74.7 30.4,69.9 C 33.5,68.4 35.8,67.7 39.8,67.8 C 42.3,67.9 45.1,69.3 45.1,69.3 C 45.1,51.2 45.0,17.0 45.0,0.2 C 46.0,0.2 46.7,0.1 48.1,0.1 C 48.1,1.1 48.1,1.9 48.1,2.7 C 48.1,3.6 48.1,4.1 48.2,4.7 C 49.2,11.0 50.6,13.5 57.6,21.2 C 66.5,31.1 69.1,37.0 69.1,44.9 C 69.0,52.3 62.5,68.1 61.1,67.5 C 63.1,61.9 65.9,55.9 66.6,50.9 C 67.5,44.8 65.0,36.2 61.0,31.7 C 57.8,27.9 50.2,24.6 48.1,24.6 C 48.1,24.6 48.0,61.0 48.0,74.8 C 48.0,77.1 45.9,81.2 44.7,82.6 C 39.2,89.2 28.5,92.2 23.7,87.9 z"/>
+    </svg>
+</template>
+<template id="note-8th-down">
+    <svg class="note-8th-down" height="37%" viewBox="-120 -80 100 140" overflow="visible">
+        <g transform="rotate(180)">
+            <path d="M 23.7,87.9 C 18.1,82.8 21.2,74.7 30.4,69.9 C 33.5,68.4 35.8,67.7 39.8,67.8 C 42.3,67.9 45.1,69.3 45.1,69.3 C 45.1,51.2 45.0,17.0 45.0,0.2 C 46.0,0.2 46.7,0.1 48.1,0.1 C 48.1,1.1 48.1,1.9 48.1,2.7 C 48.1,3.6 48.1,4.1 48.2,4.7 C 49.2,11.0 50.6,13.5 57.6,21.2 C 66.5,31.1 69.1,37.0 69.1,44.9 C 69.0,52.3 62.5,68.1 61.1,67.5 C 63.1,61.9 65.9,55.9 66.6,50.9 C 67.5,44.8 65.0,36.2 61.0,31.7 C 57.8,27.9 50.2,24.6 48.1,24.6 C 48.1,24.6 48.0,61.0 48.0,74.8 C 48.0,77.1 45.9,81.2 44.7,82.6 C 39.2,89.2 28.5,92.2 23.7,87.9 z"/>
+        </g>
+    </svg>
+</template>
+<template id="note-16th">
+    <svg class="note-16th" height="37%" viewBox="-30 76 100 140" overflow="visible">
+        <path d="M 23.7,87.9 C 18.1,82.8 21.2,74.7 30.4,69.9 C 33.5,68.4 35.8,67.7 39.8,67.8 C 42.3,67.9 45.1,69.3 45.1,69.3 C 45.1,51.2 45.0,17.0 45.0,0.2 C 46.0,0.2 46.7,0.1 48.1,0.1 C 48.1,1.1 48.1,1.9 48.1,2.7 C 48.1,3.6 48.1,4.1 48.2,4.7 C 49.2,11.0 50.6,13.5 57.6,21.2 C 66.5,31.1 69.1,37.0 69.1,44.9 C 69.0,52.3 62.5,68.1 61.1,67.5 C 63.1,61.9 65.9,55.9 66.6,50.9 C 67.5,44.8 65.0,36.2 61.0,31.7 C 57.8,27.9 50.2,24.6 48.1,24.6 C 48.1,24.6 48.0,61.0 48.0,74.8 C 48.0,77.1 45.9,81.2 44.7,82.6 C 39.2,89.2 28.5,92.2 23.7,87.9 z"/>
+    </svg>
+</template>
+<template id="note-16th-down">
+    <svg class="note-16th-down" height="37%" viewBox="-120 -80 100 140" overflow="visible">
+        <g transform="rotate(180)">
+            <path d="M 23.7,87.9 C 18.1,82.8 21.2,74.7 30.4,69.9 C 33.5,68.4 35.8,67.7 39.8,67.8 C 42.3,67.9 45.1,69.3 45.1,69.3 C 45.1,51.2 45.0,17.0 45.0,0.2 C 46.0,0.2 46.7,0.1 48.1,0.1 C 48.1,1.1 48.1,1.9 48.1,2.7 C 48.1,3.6 48.1,4.1 48.2,4.7 C 49.2,11.0 50.6,13.5 57.6,21.2 C 66.5,31.1 69.1,37.0 69.1,44.9 C 69.0,52.3 62.5,68.1 61.1,67.5 C 63.1,61.9 65.9,55.9 66.6,50.9 C 67.5,44.8 65.0,36.2 61.0,31.7 C 57.8,27.9 50.2,24.6 48.1,24.6 C 48.1,24.6 48.0,61.0 48.0,74.8 C 48.0,77.1 45.9,81.2 44.7,82.6 C 39.2,89.2 28.5,92.2 23.7,87.9 z"/>
+        </g>
+    </svg>
+</template>
+
+<!-- audio -->
+<template id="audio-control">
+    <svg class="audio-control" height="5vh" viewBox="0 0 122.88 122.88" overflow="visible" style="opacity:0.3">
+        <g>
+            <path d="M73.12,0H88.6v5.17c38.74,8.87,43.17,27.47,20.7,56.79c2.39-29.09-0.54-35.33-20.7-36.68v73.54 c0.04,0.39,0.05,0.78,0.05,1.18c0,9.56-10.03,19.04-22.4,21.18c-12.37,2.14-22.4-3.88-22.4-13.44c0-13.04,17.91-24.36,29.26-20.37 L73.12,0L73.12,0z M5.69,73.78C2.55,73.78,0,71.23,0,68.09c0-3.14,2.55-5.69,5.69-5.69h47.63c3.14,0,5.69,2.55,5.69,5.69 c0,3.14-2.55,5.69-5.69,5.69H5.69L5.69,73.78z M5.69,46.14C2.55,46.14,0,43.59,0,40.44c0-3.14,2.55-5.69,5.69-5.69h47.63 c3.14,0,5.69,2.55,5.69,5.69c0,3.14-2.55,5.69-5.69,5.69H5.69L5.69,46.14z M5.69,18.5C2.55,18.5,0,15.95,0,12.8 c0-3.14,2.55-5.69,5.69-5.69h47.63c3.14,0,5.69,2.55,5.69,5.69c0,3.14-2.55,5.69-5.69,5.69H5.69L5.69,18.5z"/>
+        </g>
+    </svg>
+</template>
+
+<!-- github -->
+<template id="github">
+    <svg class="github" height="2vh" viewBox="0 0 20 20">
+        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+            <g transform="translate(-140.000000, -7559.000000)" fill="#000000">
+                <g transform="translate(56.000000, 160.000000)">
+                    <path d="M94,7399 C99.523,7399 104,7403.59 104,7409.253 C104,7413.782 101.138,7417.624 97.167,7418.981 C96.66,7419.082 96.48,7418.762 96.48,7418.489 C96.48,7418.151 96.492,7417.047 96.492,7415.675 C96.492,7414.719 96.172,7414.095 95.813,7413.777 C98.04,7413.523 100.38,7412.656 100.38,7408.718 C100.38,7407.598 99.992,7406.684 99.35,7405.966 C99.454,7405.707 99.797,7404.664 99.252,7403.252 C99.252,7403.252 98.414,7402.977 96.505,7404.303 C95.706,7404.076 94.85,7403.962 94,7403.958 C93.15,7403.962 92.295,7404.076 91.497,7404.303 C89.586,7402.977 88.746,7403.252 88.746,7403.252 C88.203,7404.664 88.546,7405.707 88.649,7405.966 C88.01,7406.684 87.619,7407.598 87.619,7408.718 C87.619,7412.646 89.954,7413.526 92.175,7413.785 C91.889,7414.041 91.63,7414.493 91.54,7415.156 C90.97,7415.418 89.522,7415.871 88.63,7414.304 C88.63,7414.304 88.101,7413.319 87.097,7413.247 C87.097,7413.247 86.122,7413.234 87.029,7413.87 C87.029,7413.87 87.684,7414.185 88.139,7415.37 C88.139,7415.37 88.726,7417.2 91.508,7416.58 C91.513,7417.437 91.522,7418.245 91.522,7418.489 C91.522,7418.76 91.338,7419.077 90.839,7418.982 C86.865,7417.627 84,7413.783 84,7409.253 C84,7403.59 88.478,7399 94,7399">
+                    </path>
+                </g>
+            </g>
+        </g>
+    </svg>
+</template>
