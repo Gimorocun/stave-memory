@@ -1,3 +1,5 @@
+Try Experience: [https://gimorocun.github.io/stave-memory/](https://gimorocun.github.io/stave-memory/)
+
 # stave-memory
 memorization of pentatonic scores for electric keyboard and piano.<br/>
 Written in native HTML, CSS and JavaScript, adaptive to screen size.
@@ -6,7 +8,6 @@ Written in native HTML, CSS and JavaScript, adaptive to screen size.
 - Customizable note range, CDEFGAB.
 - Activation of the treble and/or bass clef.
 - Built-in three simple tunes, composed entirely of single notes.
-
 
 # 五线谱记忆
 适用于电子琴和钢琴的五线谱记忆<br/>
